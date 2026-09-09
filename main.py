@@ -1,63 +1,84 @@
-from fastapi import FastAPI, HTTPException, Depends
-from fastapi.security import APIKeyHeader
+from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from utils.inference import predict_new
-from utils.config import APP_NAME, VERSION, SECRET_KEY_TOKEN, preprocessor, forest_model, xgboost_model
-from utils.CustomerData import CustomerData
-from utils.usage_tracker import log_usage, get_stats
+from fastapi.responses import Response
+from SRC.utils.inference import run_pipeline
 
-app = FastAPI(title=APP_NAME, version=VERSION)
+app = FastAPI(
+    title="Car Damage Detection API",
+    version="1.0.0"
+)
+
 app.add_middleware(
-        CORSMiddleware, 
-        allow_origins=["*"],
-        allow_methods=["*"],
-        allow_headers=["*"],
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
-
-api_key_header = APIKeyHeader(name='X-API-Key')
-async def verify_api_key(api_key: str=Depends(api_key_header)):
-        if api_key != SECRET_KEY_TOKEN:
-                raise HTTPException(status_code=403, detail="You Are Not Authorized To Use This API")
-        
-        return api_key
-
-
-
-@app.get('/', tags=['General'])  
-async def home():
+@app.get("/")
+def root():
     return {
-            "Message": f"Welcome To My {APP_NAME} API v{VERSION}"
+        "message": "Car Damage Detection API is running"
     }
 
 
+@app.get("/health")
+def health():
+    return {
+        "status": "ok"
+    }
 
-@app.get('/stats', tags=['General'])
-async def stats(api_key: str = Depends(verify_api_key)) -> dict:
-        return get_stats()
-    
-    
 
-@app.post('/predict/forest', tags=['Models'])  
-async def predict_forest(data: CustomerData, api_key: str=Depends(verify_api_key)) -> dict:
-        
-        try:
-                result = predict_new(data=data, preprocessor=preprocessor, model=forest_model)
-                log_usage("forest")
-                return result
-        except Exception as e:
-                raise HTTPException(status_code=500, detail=str(e))
-    
-    
-    
-@app.post('/predict/xgboost', tags=['Models'])  
-async def predict_xgboost(data: CustomerData, api_key: str=Depends(verify_api_key)) -> dict:
-        
-        try:
-                result = predict_new(data=data, preprocessor=preprocessor, model=xgboost_model)
-                log_usage("xgboost")
-                return result
-        
-        except Exception as e:
-                raise HTTPException(status_code=500, detail=str(e))
+@app.post("/analyze")
+async def analyze(file: UploadFile = File(...)):
+
+    try:
+        image_bytes = await file.read()
+
+        if not image_bytes:
+            raise HTTPException(
+                status_code=400,
+                detail="No image uploaded"
+            )
+
+        result = run_pipeline(image_bytes)
+
+        return {
+            "success": True,
+            "findings": result["findings"],
+            "report": result["report"]
+        }
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
+
+
+@app.post("/analyze-image")
+async def analyze_image(file: UploadFile = File(...)):
+
+    try:
+        image_bytes = await file.read()
+
+        if not image_bytes:
+            raise HTTPException(
+                status_code=400,
+                detail="No image uploaded"
+            )
+
+        result = run_pipeline(image_bytes, include_report=False)
+
+        return Response(
+            content=result["annotated_image"],
+            media_type="image/jpeg"
+        )
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
