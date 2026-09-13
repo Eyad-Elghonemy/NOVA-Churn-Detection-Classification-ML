@@ -22,9 +22,9 @@
 
 | Component | URL |
 |---|---|
-| **API (FastAPI — Hugging Face Spaces)** | https://eyadzz-churn-live.hf.space/ |
+| **API (FastAPI — Hugging Face Spaces)** | https://churn-detection.fastapicloud.dev/ |
 | **Dashboard (Streamlit — Churn Ledger)** | https://churnlive-6mnfachkcjvec7gfaqhfjb.streamlit.app/ |
-| **Interactive API Docs (Swagger)** | https://eyadzz-churn-live.hf.space/docs |
+| **Interactive API Docs (Swagger)** | https://churn-detection.fastapicloud.dev/docs |
 
 > ⚠️ **Security note:** the key below is a **demo key** shared for evaluation only. If this repository is public, rotate it immediately (set a new `SECRET_KEY_TOKEN` in your Hugging Face Space secrets) — never rely on a key that has appeared in a public README for anything beyond a quick demo.
 
