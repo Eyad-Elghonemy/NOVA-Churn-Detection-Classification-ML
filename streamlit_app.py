@@ -41,7 +41,7 @@ st.set_page_config(
 # --------------------------------------------------------------------------
 # Backend connection (built-in, not user-editable)
 # --------------------------------------------------------------------------
-API_BASE_URL = "https://eyadzz-churn-live.hf.space/"
+API_BASE_URL = "https://churn-detection.fastapicloud.dev/"
 
 # --------------------------------------------------------------------------
 # Design tokens & theme
